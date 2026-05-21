@@ -28,5 +28,8 @@
     "tailwindcss": "catalog:",
     "typescript": "~5.9.3",
     "vite": "catalog:"
+  },
+  "dependencies": {
+    "socket.io-client": "^4.8.3"
   }
 }

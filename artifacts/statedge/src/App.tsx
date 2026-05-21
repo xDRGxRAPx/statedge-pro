@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { useBlazeSocket } from "./useBlazeSocket";
 
 type Plan = "free" | "pro" | "elite";
 type Color = "red" | "black" | "white";
@@ -606,8 +607,12 @@ export default function App() {
   const [crashRounds, setCrashRounds] = useState<CrashRound[]>(() =>
     makeCrashRounds(140)
   );
-  const [source, setSource] = useState<"blaze" | "simulado">("simulado");
+  const [source, setSource] = useState<"blaze" | "socket" | "simulado">("simulado");
   const [alerts, setAlerts] = useState<AlertItem[]>([]);
+  const seenSocketDoubleRef = useRef<Set<number>>(new Set());
+  const seenSocketCrashRef = useRef<Set<number>>(new Set());
+
+  const blazeSocket = useBlazeSocket();
   const [strategyBankroll, setStrategyBankroll] = useState(1000);
   const [channels, setChannels] = useState({
     email: true,
@@ -657,8 +662,30 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    if (blazeSocket.status !== "connected") return;
+    const { lastDoubleRound, lastCrashRound } = blazeSocket;
+    if (lastDoubleRound && !seenSocketDoubleRef.current.has(lastDoubleRound.id)) {
+      seenSocketDoubleRef.current.add(lastDoubleRound.id);
+      setDoubleRounds((prev) => {
+        const exists = prev.some((r) => r.id === lastDoubleRound.id);
+        if (exists) return prev;
+        return [...prev, lastDoubleRound].slice(-220);
+      });
+      setSource("socket");
+    }
+    if (lastCrashRound && !seenSocketCrashRef.current.has(lastCrashRound.id)) {
+      seenSocketCrashRef.current.add(lastCrashRound.id);
+      setCrashRounds((prev) => {
+        const exists = prev.some((r) => r.id === lastCrashRound.id);
+        if (exists) return prev;
+        return [...prev, lastCrashRound].slice(-220);
+      });
+    }
+  }, [blazeSocket.status, blazeSocket.lastDoubleRound, blazeSocket.lastCrashRound]);
+
+  useEffect(() => {
     const interval = setInterval(() => {
-      if (source === "blaze") return;
+      if (source === "blaze" || source === "socket") return;
       setDoubleRounds((prev) => {
         const next = [
           ...prev,
@@ -689,6 +716,7 @@ export default function App() {
 
   useEffect(() => {
     const poll = setInterval(async () => {
+      if (blazeSocket.status === "connected") return;
       const [doubleData, crashData] = await Promise.all([
         fetchBlazeDouble(),
         fetchBlazeCrash(),
@@ -700,7 +728,7 @@ export default function App() {
       }
     }, 15000);
     return () => clearInterval(poll);
-  }, []);
+  }, [blazeSocket.status]);
 
   useEffect(() => {
     const nextAlerts: AlertItem[] = [];
@@ -813,13 +841,27 @@ export default function App() {
             <div className="mt-2 flex items-center gap-1.5">
               <div
                 className={`h-1.5 w-1.5 rounded-full ${
-                  source === "blaze"
+                  source === "socket"
                     ? "bg-emerald-400 animate-pulse"
+                    : source === "blaze"
+                    ? "bg-emerald-400 animate-pulse"
+                    : blazeSocket.status === "connecting"
+                    ? "bg-cyan-400 animate-pulse"
+                    : blazeSocket.status === "blocked"
+                    ? "bg-rose-500"
                     : "bg-amber-400"
                 }`}
               />
               <p className="text-xs text-slate-400">
-                {source === "blaze" ? "Blaze ao vivo" : "Simulado"}
+                {source === "socket"
+                  ? "Blaze WebSocket"
+                  : source === "blaze"
+                  ? "Blaze ao vivo"
+                  : blazeSocket.status === "connecting"
+                  ? "Conectando..."
+                  : blazeSocket.status === "blocked"
+                  ? "Simulado (IP bloqueado)"
+                  : "Simulado"}
               </p>
             </div>
           </div>
