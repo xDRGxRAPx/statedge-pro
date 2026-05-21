@@ -30,3 +30,11 @@ externalPort = 80
 [[ports]]
 localPort = 26246
 externalPort = 3000
+
+[userenv]
+
+[userenv.shared]
+SUPABASE_URL = "https://zjjqcnqgsojcqogsutmj.supabase.co"
+
+[nix]
+channel = "stable-25_05"

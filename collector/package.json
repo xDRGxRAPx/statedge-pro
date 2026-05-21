@@ -1,0 +1,14 @@
+{
+  "name": "blaze-collector",
+  "version": "1.0.0",
+  "description": "Coletor em tempo real do Double da Blaze → Supabase",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node index.js",
+    "setup": "npx playwright install chromium --with-deps"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.50.0",
+    "playwright": "^1.52.0"
+  }
+}
