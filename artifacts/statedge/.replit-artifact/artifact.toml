@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "StatEdge Pro"
+version = "1.0.0"
+id = "artifacts/statedge"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 26246
+
+[services.development]
+run = "pnpm --filter @workspace/statedge run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/statedge", "run", "build" ]
+publicDir = "artifacts/statedge/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "26246"
+BASE_PATH = "/"
