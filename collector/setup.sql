@@ -1,23 +1,44 @@
 -- Execute este SQL no Supabase → SQL Editor antes de rodar o coletor
+-- Tabela unificada para Double e Crash
 
-create table if not exists double_results (
-  id         text        primary key,
-  color      text        not null check (color in ('red', 'black', 'white')),
-  number     integer,
-  created_at timestamptz default now()
+CREATE TABLE IF NOT EXISTS history (
+  id          TEXT        PRIMARY KEY,
+  game_type   TEXT        NOT NULL CHECK (game_type IN ('double', 'crash')),
+  color       TEXT        CHECK (color IN ('red', 'black', 'white')),
+  multiplier  FLOAT,
+  created_at  TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- Índices para consultas rápidas
-create index if not exists idx_double_color   on double_results(color);
-create index if not exists idx_double_created on double_results(created_at desc);
+CREATE INDEX IF NOT EXISTS idx_history_game_type ON history(game_type);
+CREATE INDEX IF NOT EXISTS idx_history_created    ON history(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_history_color      ON history(color);
 
--- Habilitar Row Level Security (opcional mas recomendado)
-alter table double_results enable row level security;
+-- Habilitar Row Level Security
+ALTER TABLE history ENABLE ROW LEVEL SECURITY;
 
--- Política pública de leitura (o frontend pode ler sem autenticação)
-create policy "Leitura pública" on double_results
-  for select using (true);
+-- Leitura pública (frontend acessa sem autenticação)
+CREATE POLICY "Leitura pública" ON history
+  FOR SELECT USING (true);
 
--- Somente service_role pode inserir/atualizar
-create policy "Inserção via service_role" on double_results
-  for insert using (auth.role() = 'service_role');
+-- Inserção apenas via service_role (coletor backend)
+CREATE POLICY "Inserção via service_role" ON history
+  FOR INSERT WITH CHECK (auth.role() = 'service_role');
+
+-- Manter tabela antiga double_results (dados legados)
+CREATE TABLE IF NOT EXISTS double_results (
+  id         TEXT        PRIMARY KEY,
+  color      TEXT        NOT NULL CHECK (color IN ('red', 'black', 'white')),
+  number     INTEGER,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_double_color   ON double_results(color);
+CREATE INDEX IF NOT EXISTS idx_double_created ON double_results(created_at DESC);
+ALTER TABLE double_results ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Leitura pública dr" ON double_results
+  FOR SELECT USING (true);
+
+CREATE POLICY "Inserção via service_role dr" ON double_results
+  FOR INSERT WITH CHECK (auth.role() = 'service_role');

@@ -1,0 +1,262 @@
+Você é um desenvolvedor sênior fullstack.
+
+Crie um aplicativo web completo (frontend + backend simples) para análise comportamental de jogos tipo Double e Crash (sem prever resultados, apenas análise estatística baseada em histórico real).
+
+O sistema deve ser conectado ao Supabase para puxar dados em tempo real.
+
+==================================================
+MÓDULO 1 — CONFIGURAÇÃO BASE
+==================================================
+
+Tecnologias:
+- Frontend: React + Tailwind
+- Backend: Node.js (ou funções serverless simples)
+- Banco: Supabase
+
+Criar estrutura:
+
+/src
+/components
+/services
+/utils
+/pages
+
+Criar arquivo de configuração:
+
+supabaseClient.js
+
+==================================================
+MÓDULO 2 — CONEXÃO COM SUPABASE
+==================================================
+
+Tabela esperada:
+
+history:
+- id
+- timestamp
+- color (red | black | white)
+- multiplier (float, usado no Crash)
+- created_at
+
+Criar função:
+
+fetchHistory(limit)
+
+Deve buscar últimas N jogadas ordenadas por timestamp DESC.
+
+==================================================
+MÓDULO 3 — JANELAS DE ANÁLISE
+==================================================
+
+Criar função:
+
+getWindows(history)
+
+Retornar:
+
+- last10
+- last20
+- last50
+- last100
+
+==================================================
+MÓDULO 4 — CÁLCULO DE FREQUÊNCIA
+==================================================
+
+Criar função:
+
+calculateFrequency(window)
+
+Retornar:
+
+- red_pct
+- black_pct
+- white_pct
+
+==================================================
+MÓDULO 5 — DESVIO DA MÉDIA
+==================================================
+
+Probabilidade base:
+
+- red: 0.475
+- black: 0.475
+- white: 0.025
+
+Criar função:
+
+calculateDeviation(freq)
+
+Retornar:
+
+- desvio_red
+- desvio_black
+- desvio_white
+
+==================================================
+MÓDULO 6 — DETECÇÃO DE EVENTOS
+==================================================
+
+Criar sistema de eventos baseado em padrões:
+
+Eventos obrigatórios:
+
+1. sequência >= 3 mesma cor
+2. sequência >= 5 mesma cor
+3. sequência >= 7 mesma cor
+4. alternância perfeita (mínimo 5 jogadas)
+5. ausência de white >= 10
+6. ausência de white >= 25
+7. ausência de white >= 50
+8. quebra de sequência longa
+9. cluster de cores iguais
+10. repetição após alternância
+
+Criar função:
+
+detectEvents(history)
+
+Retornar lista de eventos ativos com intensidade (baixa, média, alta)
+
+==================================================
+MÓDULO 7 — SCORE DE PROBABILIDADE
+==================================================
+
+Criar função:
+
+calculateScore(freq, deviation, events)
+
+Regras:
+
+- Base:
+  red = 0.475
+  black = 0.475
+  white = 0.025
+
+- Ajustes:
+  - reduzir score se cor estiver acima da média
+  - aumentar levemente se estiver abaixo
+  - aumentar white se ausência longa detectada
+
+Limites obrigatórios:
+
+- red <= 0.55
+- black <= 0.55
+- white <= 0.10
+
+Normalizar soma para 1
+
+==================================================
+MÓDULO 8 — CRASH ANALYTICS
+==================================================
+
+Classificar multiplicadores:
+
+- baixa: 1.0–1.5
+- média: 1.5–3
+- alta: 3–10
+- explosiva: 10+
+
+Criar função:
+
+analyzeCrash(history)
+
+Detectar:
+
+- sequência de velas baixas
+- ausência de explosões
+- cluster de multiplicadores altos
+- intervalo médio entre picos
+
+==================================================
+MÓDULO 9 — UI DASHBOARD
+==================================================
+
+Criar interface com:
+
+1. Painel de Probabilidade:
+   - Red %
+   - Black %
+   - White %
+
+2. Frequência por janela:
+   - 10 / 20 / 50 / 100
+
+3. Eventos ativos:
+   - lista com intensidade
+
+4. Histórico recente:
+   - últimas 20 jogadas
+
+5. Crash painel:
+   - distribuição de multiplicadores
+
+==================================================
+MÓDULO 10 — ATUALIZAÇÃO EM TEMPO REAL
+==================================================
+
+Atualizar dados a cada 5 segundos:
+
+setInterval(() => {
+  fetchHistory()
+}, 5000)
+
+==================================================
+MÓDULO 11 — ALERTAS
+==================================================
+
+Criar sistema visual:
+
+- vermelho: risco alto
+- amarelo: atenção
+- verde: neutro
+
+Exibir:
+
+- sequência longa detectada
+- ausência de white
+- desvio alto
+
+==================================================
+MÓDULO 12 — ORGANIZAÇÃO DO CÓDIGO
+==================================================
+
+Separar lógica em:
+
+/utils
+- frequency.js
+- deviation.js
+- events.js
+- score.js
+- crash.js
+
+/services
+- supabase.js
+
+/components
+- Dashboard.jsx
+- EventsPanel.jsx
+- ProbabilityCard.jsx
+- HistoryList.jsx
+
+==================================================
+REGRAS IMPORTANTES
+==================================================
+
+1. NÃO criar sistema de previsão ou promessas de acerto
+2. NÃO usar IA para “prever resultado”
+3. Focar em análise estatística e comportamento
+4. Código limpo e modular
+5. Interface responsiva
+
+==================================================
+OBJETIVO FINAL
+==================================================
+
+Criar um dashboard funcional que:
+
+- analisa histórico real
+- detecta padrões
+- calcula probabilidades ajustadas
+- exibe alertas inteligentes
+- ajuda na tomada de decisão (sem prometer acerto)
