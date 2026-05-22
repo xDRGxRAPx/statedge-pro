@@ -1,0 +1,2 @@
+Deploy triggered at 2026-05-22T18:54:27.334Z
+vercel.json buildCommand: pnpm --filter @workspace/statedge run build
