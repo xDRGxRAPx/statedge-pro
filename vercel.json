@@ -1,5 +1,5 @@
 {
-  "buildCommand": "pnpm run vercel-build",
+  "buildCommand": "pnpm --filter @workspace/statedge run build",
   "outputDirectory": "artifacts/statedge/dist",
   "installCommand": "pnpm install",
   "framework": null,
