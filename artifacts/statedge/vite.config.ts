@@ -6,6 +6,12 @@ import { defineConfig } from "vite";
   const port = Number(process.env.PORT) || 3000;
   const basePath = process.env.BASE_PATH || "/";
 
+  // On Vercel, output to repo root ./dist so Vercel finds it at outputDirectory:"dist"
+  // On Replit/local, output to artifacts/statedge/dist as usual
+  const outDir = process.env.VERCEL
+    ? path.resolve(import.meta.dirname, "../../dist")
+    : path.resolve(import.meta.dirname, "dist");
+
   export default defineConfig({
     base: basePath,
     plugins: [
@@ -36,8 +42,17 @@ import { defineConfig } from "vite";
     },
     root: path.resolve(import.meta.dirname),
     build: {
-      outDir: path.resolve(import.meta.dirname, "dist"),
+      outDir,
       emptyOutDir: true,
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            vendor: ["react", "react-dom"],
+            motion: ["framer-motion"],
+            supabase: ["@supabase/supabase-js"],
+          },
+        },
+      },
     },
     server: {
       port,
