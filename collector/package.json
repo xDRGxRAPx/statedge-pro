@@ -1,17 +1,16 @@
 {
-    "name": "blaze-collector",
-    "version": "1.0.0",
-    "description": "Coletor em tempo real Double + Crash da Blaze → Supabase",
-    "type": "commonjs",
-    "engines": {
-      "node": ">=18"
-    },
-    "scripts": {
-      "start": "node index.js"
-    },
-    "dependencies": {
-      "@supabase/supabase-js": "^2.50.0",
-      "socket.io-client": "^4.8.3"
-    }
+  "name": "blaze-collector",
+  "version": "1.0.0",
+  "description": "Coletor em tempo real Double + Crash da Blaze → Supabase",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node start.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.50.0",
+    "socket.io-client": "^4.8.3"
   }
-  
+}
