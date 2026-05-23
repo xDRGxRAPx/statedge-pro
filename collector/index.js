@@ -3,7 +3,7 @@
 const { createClient } = require("@supabase/supabase-js");
 const { io } = require("socket.io-client");
 
-const SUPABASE_URL = process.env.SUPABASE_URL || "https://zjjqcnqgsojcqogsutmj.supabase.co";
+const SUPABASE_URL = process.env.SUPABASE_URL || "https://rrmxyoeqbllravvcloqu.supabase.co";
 const SUPABASE_KEY = process.env.SUPABASE_KEY;
 
 if (!SUPABASE_KEY) {
