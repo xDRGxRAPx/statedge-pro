@@ -1,5 +1,5 @@
 {
-  "buildCommand": "pnpm --filter @workspace/statedge run build",
+  "buildCommand": "cd artifacts/statedge && pnpm build",
   "outputDirectory": "artifacts/statedge/dist",
   "installCommand": "pnpm install",
   "framework": null,
