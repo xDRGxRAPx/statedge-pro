@@ -1,6 +1,6 @@
 {
   "buildCommand": "pnpm --filter @workspace/statedge run build",
-  "outputDirectory": "dist",
+  "outputDirectory": "artifacts/statedge/dist",
   "installCommand": "pnpm install",
   "framework": null,
   "rewrites": [
@@ -8,8 +8,7 @@
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "functions": {
-    "api/blaze-proxy.js": {
-      "maxDuration": 10
-    }
+    "api/blaze-double.js": { "maxDuration": 10 },
+    "api/blaze-crash.js": { "maxDuration": 10 }
   }
 }
