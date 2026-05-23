@@ -1,12 +1,16 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 import { fetchDoubleHistory, fetchCrashHistory } from "./services/supabase";
 import { getWindows, calculateFrequency } from "./utils/frequency";
 import { calculateDeviation } from "./utils/deviation";
 import { detectEvents } from "./utils/events";
 import { calculateScore } from "./utils/score";
 import { analyzeCrash } from "./utils/crash";
-import { generateSimulatedDouble, generateSimulatedCrash } from "./utils/simulate";
+import {
+  generateSimulatedDouble,
+  generateSimulatedCrash,
+} from "./utils/simulate";
 import { useBlazeSocket } from "./useBlazeSocket";
 import type { HistoryItem } from "./utils/types";
 
@@ -24,7 +28,7 @@ type ActiveTab = "double" | "crash";
 
 function mergeHistory(
   base: HistoryItem[],
-  incoming: HistoryItem[]
+  incoming: HistoryItem[],
 ): HistoryItem[] {
   const seen = new Set(base.map((h) => h.id));
   const newItems = incoming.filter((h) => !seen.has(h.id));
@@ -35,10 +39,10 @@ function mergeHistory(
 
 export default function App() {
   const [doubleHistory, setDoubleHistory] = useState<HistoryItem[]>(() =>
-    generateSimulatedDouble(120)
+    generateSimulatedDouble(120),
   );
   const [crashHistory, setCrashHistory] = useState<HistoryItem[]>(() =>
-    generateSimulatedCrash(100)
+    generateSimulatedCrash(100),
   );
   const [source, setSource] = useState<DataSource>("simulado");
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
@@ -115,14 +119,21 @@ export default function App() {
       return;
     }
     simInterval.current = setInterval(() => {
-      const colors: Array<"red" | "black" | "white"> = ["red", "black", "white"];
+      const colors: Array<"red" | "black" | "white"> = [
+        "red",
+        "black",
+        "white",
+      ];
       const weights = [0.475, 0.475, 0.05];
       const r = Math.random();
       let cumul = 0;
       let color: "red" | "black" | "white" = "black";
       for (let i = 0; i < colors.length; i++) {
         cumul += weights[i];
-        if (r < cumul) { color = colors[i]; break; }
+        if (r < cumul) {
+          color = colors[i];
+          break;
+        }
       }
       setDoubleHistory((prev) => {
         const next: HistoryItem = {
@@ -136,13 +147,14 @@ export default function App() {
       });
 
       const rm = Math.random();
-      const mult = rm < 0.55
-        ? 1 + Math.random() * 0.5
-        : rm < 0.80
-        ? 1.5 + Math.random() * 1.5
-        : rm < 0.95
-        ? 3 + Math.random() * 7
-        : 10 + Math.random() * 20;
+      const mult =
+        rm < 0.55
+          ? 1 + Math.random() * 0.5
+          : rm < 0.8
+            ? 1.5 + Math.random() * 1.5
+            : rm < 0.95
+              ? 3 + Math.random() * 7
+              : 10 + Math.random() * 20;
       setCrashHistory((prev) => {
         const next: HistoryItem = {
           id: `sim-c-${Date.now()}`,
@@ -161,14 +173,32 @@ export default function App() {
   }, [source]);
 
   // --- Analytics (Double) ---
-  const doubleWindows = useMemo(() => getWindows(doubleHistory), [doubleHistory]);
-  const doubleFreq = useMemo(() => calculateFrequency(doubleHistory.slice(-100)), [doubleHistory]);
-  const doubleDeviation = useMemo(() => calculateDeviation(doubleFreq), [doubleFreq]);
-  const doubleEvents = useMemo(() => detectEvents(doubleHistory), [doubleHistory]);
-  const doubleScore = useMemo(() => calculateScore(doubleFreq, doubleDeviation, doubleEvents), [doubleFreq, doubleDeviation, doubleEvents]);
+  const doubleWindows = useMemo(
+    () => getWindows(doubleHistory),
+    [doubleHistory],
+  );
+  const doubleFreq = useMemo(
+    () => calculateFrequency(doubleHistory.slice(-100)),
+    [doubleHistory],
+  );
+  const doubleDeviation = useMemo(
+    () => calculateDeviation(doubleFreq),
+    [doubleFreq],
+  );
+  const doubleEvents = useMemo(
+    () => detectEvents(doubleHistory),
+    [doubleHistory],
+  );
+  const doubleScore = useMemo(
+    () => calculateScore(doubleFreq, doubleDeviation, doubleEvents),
+    [doubleFreq, doubleDeviation, doubleEvents],
+  );
 
   // --- Analytics (Crash) ---
-  const crashAnalysis = useMemo(() => analyzeCrash(crashHistory), [crashHistory]);
+  const crashAnalysis = useMemo(
+    () => analyzeCrash(crashHistory),
+    [crashHistory],
+  );
 
   const totalRounds = doubleHistory.length + crashHistory.length;
 
@@ -185,6 +215,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#020617] text-slate-200">
+      <SpeedInsights />
       {/* Header */}
       <header className="sticky top-0 z-30 border-b border-slate-800 bg-[#020617]/95 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
@@ -217,11 +248,17 @@ export default function App() {
           <div className="hidden sm:flex items-center gap-2">
             <div
               className={`h-2 w-2 rounded-full ${
-                source === "simulado" ? "bg-amber-400" : "bg-emerald-400 animate-pulse"
+                source === "simulado"
+                  ? "bg-amber-400"
+                  : "bg-emerald-400 animate-pulse"
               }`}
             />
             <span className="text-xs text-slate-500">
-              {source === "supabase" ? "Supabase" : source === "socket" ? "WebSocket" : "Simulado"}
+              {source === "supabase"
+                ? "Supabase"
+                : source === "socket"
+                  ? "WebSocket"
+                  : "Simulado"}
             </span>
           </div>
         </div>
@@ -229,7 +266,11 @@ export default function App() {
 
       <main className="max-w-7xl mx-auto px-4 py-5 space-y-4">
         {/* Status bar */}
-        <StatusBar source={source} lastUpdate={lastUpdate} total={totalRounds} />
+        <StatusBar
+          source={source}
+          lastUpdate={lastUpdate}
+          total={totalRounds}
+        />
 
         {/* Alerts */}
         {activeTab === "double" && <AlertsBanner events={doubleEvents} />}
@@ -303,19 +344,19 @@ function CrashSequencePanel({ history }: { history: HistoryItem[] }) {
           const color = isExplosive
             ? "#ef4444"
             : isHigh
-            ? "#f59e0b"
-            : isMedium
-            ? "#22d3ee"
-            : "#475569";
+              ? "#f59e0b"
+              : isMedium
+                ? "#22d3ee"
+                : "#475569";
 
           const bg = color + "12";
           const label = isExplosive
             ? "explosiva"
             : isHigh
-            ? "alta"
-            : isMedium
-            ? "média"
-            : "baixa";
+              ? "alta"
+              : isMedium
+                ? "média"
+                : "baixa";
 
           return (
             <div
@@ -323,13 +364,13 @@ function CrashSequencePanel({ history }: { history: HistoryItem[] }) {
               className="flex items-center justify-between px-3 py-1.5 rounded-lg"
               style={{ background: bg, border: `1px solid ${color}20` }}
             >
-              <span
-                className="text-sm font-mono font-bold"
-                style={{ color }}
-              >
+              <span className="text-sm font-mono font-bold" style={{ color }}>
                 {m.toFixed(2)}x
               </span>
-              <span className="text-[10px] uppercase tracking-wide" style={{ color }}>
+              <span
+                className="text-[10px] uppercase tracking-wide"
+                style={{ color }}
+              >
                 {label}
               </span>
             </div>
@@ -347,7 +388,10 @@ function Disclaimer() {
   return (
     <div className="bg-slate-900/60 border border-slate-800 rounded-xl px-4 py-3">
       <p className="text-[10px] text-slate-600 leading-relaxed">
-        ⚠️ Este dashboard é para <strong className="text-slate-500">análise estatística</strong> do histórico de jogadas. Não é previsão de resultados e não garante acerto. Jogue com responsabilidade.
+        ⚠️ Este dashboard é para{" "}
+        <strong className="text-slate-500">análise estatística</strong> do
+        histórico de jogadas. Não é previsão de resultados e não garante acerto.
+        Jogue com responsabilidade.
       </p>
     </div>
   );
