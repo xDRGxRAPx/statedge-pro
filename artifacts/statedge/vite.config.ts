@@ -8,9 +8,7 @@ import { defineConfig } from "vite";
 
   // On Vercel, output to repo root ./dist so Vercel finds it at outputDirectory:"dist"
   // On Replit/local, output to artifacts/statedge/dist as usual
-  const outDir = process.env.VERCEL
-    ? path.resolve(import.meta.dirname, "../../dist")
-    : path.resolve(import.meta.dirname, "dist");
+  const outDir = "dist";
 
   export default defineConfig({
     base: basePath,
