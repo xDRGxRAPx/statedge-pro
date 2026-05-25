@@ -40,7 +40,7 @@ export default function App() {
   const [crashHistory, setCrashHistory] = useState<HistoryItem[]>(() =>
     generateSimulatedCrash(100)
   );
-  const [source, setSource] = useState<DataSource>("simulado");
+  const [source, setSource] = useState<DataSource>("supabase");
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [activeTab, setActiveTab] = useState<ActiveTab>("double");
   const [isLoading, setIsLoading] = useState(true);
@@ -54,14 +54,14 @@ export default function App() {
       fetchDoubleHistory(200),
       fetchCrashHistory(200),
     ]);
-    if (dbl.length > 0 || crash.length > 0) {
+    if (true) {
       if (dbl.length > 0) setDoubleHistory(dbl);
       if (crash.length > 0) setCrashHistory(crash);
       setSource("supabase");
       setLastUpdate(new Date());
       return true;
     }
-    return false;
+    throw new Error("Sem dados do Supabase");
   }, []);
 
   // Initial load
@@ -107,13 +107,9 @@ export default function App() {
 
   // Simulation (only when no real data)
   useEffect(() => {
-    if (source !== "simulado") {
-      if (simInterval.current) {
-        clearInterval(simInterval.current);
-        simInterval.current = null;
-      }
-      return;
-    }
+  // SIMULAÇÃO DESATIVADA
+  return;
+}, []);
     simInterval.current = setInterval(() => {
       const colors: Array<"red" | "black" | "white"> = ["red", "black", "white"];
       const weights = [0.475, 0.475, 0.05];
