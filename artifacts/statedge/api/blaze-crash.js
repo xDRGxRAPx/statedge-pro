@@ -1,56 +1,47 @@
-const https = require("https");
+export default async function handler(req, res) {
+  try {
+    const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-module.exports = async function handler(req, res) {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
-  res.setHeader("Content-Type", "application/json");
-  if (req.method === "OPTIONS") return res.status(200).end();
-
-  function fetch(path) {
-    return new Promise((resolve, reject) => {
-      const r = https.request(
-        {
-          hostname: "blaze.com",
-          path,
-          method: "GET",
-          headers: {
-            "User-Agent": "Mozilla/5.0",
-            Accept: "application/json",
-            Referer: "https://blaze.com/",
-          },
-          timeout: 8000,
+    const response = await fetch(
+      `${SUPABASE_URL}/rest/v1/crash_history?select=*&order=created_at.desc&limit=100`,
+      {
+        headers: {
+          apikey: SUPABASE_KEY,
+          Authorization: `Bearer ${SUPABASE_KEY}`,
+          Accept: "application/json",
         },
-        (resp) => {
-          let body = "";
-          resp.on("data", (c) => (body += c));
-          resp.on("end", () => {
-            try {
-              resolve(JSON.parse(body));
-            } catch {
-              reject(new Error("JSON invalido"));
-            }
-          });
-        }
-      );
-      r.on("error", reject);
-      r.on("timeout", () => {
-        r.destroy();
-        reject(new Error("Timeout"));
+      }
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+
+      return res.status(200).json({
+        ok: false,
+        source: "supabase",
+        error: errorText,
       });
-      r.end();
+    }
+
+    const data = await response.json();
+
+    const mapped = data.map((item) => ({
+      id: item.id,
+      multiplier: Number(item.crash_point ?? item.multiplier ?? 1),
+      createdAt: item.created_at,
+    }));
+
+    return res.status(200).json({
+      ok: true,
+      source: "supabase",
+      data: mapped,
+    });
+  } catch (error) {
+    return res.status(200).json({
+      ok: false,
+      source: "supabase",
+      error: error.message,
     });
   }
-
-  try {
-    const data = await fetch("/api/crash_games/recent");
-    const rounds = Array.isArray(data) ? data : data?.data ?? [];
-    const mapped = rounds.map((item) => ({
-      id: Number(item.id),
-      multiplier: parseFloat(item.crash_point ?? item.multiplier ?? "1"),
-      createdAt: item.created_at ?? new Date().toISOString(),
-    }));
-    return res.status(200).json({ ok: true, data: mapped });
-  } catch (err) {
-    return res.status(502).json({ ok: false, error: err.message });
-  }
-};
+}
