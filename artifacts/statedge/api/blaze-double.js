@@ -4,7 +4,7 @@ export default async function handler(req, res) {
     const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
     const response = await fetch(
-      `${SUPABASE_URL}/rest/v1/roulette_history?select=*&order=created_at.desc&limit=100`,
+      `${SUPABASE_URL}/rest/v1/roulette_history?select=*&order=created_at.desc&limit=1500`,
       {
         headers: {
           apikey: SUPABASE_KEY,
@@ -16,6 +16,7 @@ export default async function handler(req, res) {
 
     if (!response.ok) {
       const errorText = await response.text();
+
       return res.status(200).json({
         ok: false,
         source: "supabase",
@@ -25,14 +26,18 @@ export default async function handler(req, res) {
 
     const data = await response.json();
 
+    const mapped = data.map((item) => ({
+      id: item.id,
+      color: item.color,
+      number: item.number,
+      createdAt: item.created_at,
+    }));
+
     return res.status(200).json({
       ok: true,
       source: "supabase",
-      data: data.map((item) => ({
-        id: item.id,
-        color: item.color,
-        createdAt: item.created_at,
-      })),
+      total: mapped.length,
+      data: mapped,
     });
   } catch (error) {
     return res.status(200).json({
