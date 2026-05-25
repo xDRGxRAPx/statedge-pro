@@ -1,45 +1,47 @@
 export default async function handler(req, res) {
   try {
-    const response = await fetch("https://blaze.com/api/roulette_games/recent", {
-      headers: {
-        "User-Agent": "Mozilla/5.0",
-        "Accept": "application/json",
-        "Referer": "https://blaze.com/"
-      }
-    });
+    const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-    // ⚠️ TRATAMENTO DE BLOQUEIO
+    const response = await fetch(
+      `${SUPABASE_URL}/rest/v1/roulette_history?select=*&order=created_at.desc&limit=100`,
+      {
+        headers: {
+          apikey: SUPABASE_KEY,
+          Authorization: `Bearer ${SUPABASE_KEY}`,
+          Accept: "application/json",
+        },
+      }
+    );
+
     if (!response.ok) {
+      const errorText = await response.text();
+
       return res.status(200).json({
         ok: false,
-        blocked: true,
-        status: response.status,
-        message: "Blaze bloqueou a requisição"
+        source: "supabase",
+        error: errorText,
       });
     }
 
     const data = await response.json();
 
-    const mapped = data.map(item => ({
-      id: Number(item.id),
-      color:
-        item.color === 0
-          ? "white"
-          : item.color === 1
-          ? "red"
-          : "black",
-      createdAt: item.created_at
+    const mapped = data.map((item) => ({
+      id: item.id,
+      color: item.color,
+      createdAt: item.created_at,
     }));
 
     return res.status(200).json({
       ok: true,
-      data: mapped
+      source: "supabase",
+      data: mapped,
     });
-
   } catch (error) {
     return res.status(200).json({
       ok: false,
-      error: error.message
+      source: "supabase",
+      error: error.message,
     });
   }
 }
