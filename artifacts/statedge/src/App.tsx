@@ -105,56 +105,13 @@ export default function App() {
     }
   }, [blazeSocket.status, blazeSocket.doubleRounds, blazeSocket.crashRounds]);
 
-  // Simulation (only when no real data)
+    // Simulation disabled
   useEffect(() => {
-  // SIMULAÇÃO DESATIVADA
-  return;
-}, []);
-    simInterval.current = setInterval(() => {
-      const colors: Array<"red" | "black" | "white"> = ["red", "black", "white"];
-      const weights = [0.475, 0.475, 0.05];
-      const r = Math.random();
-      let cumul = 0;
-      let color: "red" | "black" | "white" = "black";
-      for (let i = 0; i < colors.length; i++) {
-        cumul += weights[i];
-        if (r < cumul) { color = colors[i]; break; }
-      }
-      setDoubleHistory((prev) => {
-        const next: HistoryItem = {
-          id: `sim-d-${Date.now()}`,
-          game_type: "double",
-          color,
-          multiplier: null,
-          created_at: new Date().toISOString(),
-        };
-        return [...prev, next].slice(-220);
-      });
-
-      const rm = Math.random();
-      const mult = rm < 0.55
-        ? 1 + Math.random() * 0.5
-        : rm < 0.80
-        ? 1.5 + Math.random() * 1.5
-        : rm < 0.95
-        ? 3 + Math.random() * 7
-        : 10 + Math.random() * 20;
-      setCrashHistory((prev) => {
-        const next: HistoryItem = {
-          id: `sim-c-${Date.now()}`,
-          game_type: "crash",
-          color: null,
-          multiplier: parseFloat(mult.toFixed(2)),
-          created_at: new Date().toISOString(),
-        };
-        return [...prev, next].slice(-220);
-      });
-      setLastUpdate(new Date());
-    }, 4000);
-    return () => {
-      if (simInterval.current) clearInterval(simInterval.current);
-    };
-  }, [source]);
+    if (simInterval.current) {
+      clearInterval(simInterval.current);
+      simInterval.current = null;
+    }
+  }, []);
 
   // --- Analytics (Double) ---
   const doubleWindows = useMemo(() => getWindows(doubleHistory), [doubleHistory]);
