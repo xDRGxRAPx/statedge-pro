@@ -16,7 +16,6 @@ export default async function handler(req, res) {
 
     if (!response.ok) {
       const errorText = await response.text();
-
       return res.status(200).json({
         ok: false,
         source: "supabase",
@@ -26,16 +25,14 @@ export default async function handler(req, res) {
 
     const data = await response.json();
 
-    const mapped = data.map((item) => ({
-      id: item.id,
-      color: item.color,
-      createdAt: item.created_at,
-    }));
-
     return res.status(200).json({
       ok: true,
       source: "supabase",
-      data: mapped,
+      data: data.map((item) => ({
+        id: item.id,
+        color: item.color,
+        createdAt: item.created_at,
+      })),
     });
   } catch (error) {
     return res.status(200).json({
