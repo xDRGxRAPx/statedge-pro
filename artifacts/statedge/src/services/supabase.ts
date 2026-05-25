@@ -10,7 +10,7 @@ import { createClient } from "@supabase/supabase-js";
   export async function fetchHistory(limit = 200): Promise<HistoryItem[]> {
     try {
       const { data, error } = await supabase
-        .from("history")
+        .from("roulette_history")
         .select("*")
         .order("created_at", { ascending: false })
         .limit(limit);
@@ -27,7 +27,7 @@ import { createClient } from "@supabase/supabase-js";
   export async function fetchDoubleHistory(limit = 150): Promise<HistoryItem[]> {
     try {
       const { data, error } = await supabase
-        .from("history")
+        .from("roulette_history")
         .select("*")
         .eq("game_type", "double")
         .order("created_at", { ascending: false })
@@ -44,7 +44,7 @@ import { createClient } from "@supabase/supabase-js";
   export async function fetchCrashHistory(limit = 150): Promise<HistoryItem[]> {
     try {
       const { data, error } = await supabase
-        .from("history")
+        .from("roulette_history")
         .select("*")
         .eq("game_type", "crash")
         .order("created_at", { ascending: false })
