@@ -1,60 +1,67 @@
 import { createClient } from "@supabase/supabase-js";
-  import type { HistoryItem } from "../utils/types";
+import type { HistoryItem } from "../utils/types";
 
-  const SUPABASE_URL = "https://rrmxyoeqbllravvcloqu.supabase.co";
-  const SUPABASE_ANON_KEY =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJybXh5b2VxYmxscmF2dmNsb3F1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0OTc4MDAsImV4cCI6MjA5NTA3MzgwMH0.VFtPmtchpFKjxSSuvbWCC5im5GtKcmkc2pO7OTqet4k";
+const SUPABASE_URL = "https://sixhmydiybvzsrkexrsl.supabase.co";
 
-  export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const SUPABASE_ANON_KEY =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNpeGhteWRpeWJ2enNya2V4cnNsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk1Njc1NTQsImV4cCI6MjA5NTE0MzU1NH0.VV2Pe8U6gV7R5C6fDwHOmZq_LVVWnkBrk-I7ZUnzEVo";
 
-  export async function fetchHistory(limit = 200): Promise<HistoryItem[]> {
-    try {
-      const { data, error } = await supabase
-        .from("roulette_history")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(limit);
+export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-      if (error) throw error;
-      if (!data?.length) return [];
+export async function fetchDoubleHistory(limit = 1000): Promise<HistoryItem[]> {
+  try {
+    const { data, error } = await supabase
+      .from("roulette_history")
+      .select("id,color,number,created_at")
+      .order("created_at", { ascending: false })
+      .limit(limit);
 
-      return (data as HistoryItem[]).reverse();
-    } catch {
-      return [];
-    }
+    if (error) throw error;
+    if (!data?.length) return [];
+
+    return data
+      .map((item) => ({
+        id: String(item.id),
+        game_type: "double" as const,
+        color: item.color,
+        number: item.number,
+        multiplier: null,
+        created_at: item.created_at,
+      }))
+      .reverse();
+  } catch (err) {
+    console.error("Erro fetchDoubleHistory:", err);
+    return [];
   }
+}
 
-  export async function fetchDoubleHistory(limit = 150): Promise<HistoryItem[]> {
-    try {
-      const { data, error } = await supabase
-        .from("roulette_history")
-        .select("*")
-        .eq("game_type", "double")
-        .order("created_at", { ascending: false })
-        .limit(limit);
+export async function fetchCrashHistory(limit = 1000): Promise<HistoryItem[]> {
+  try {
+    const { data, error } = await supabase
+      .from("crash_history")
+      .select("id,multiplier,created_at")
+      .order("created_at", { ascending: false })
+      .limit(limit);
 
-      if (error) throw error;
-      if (!data?.length) return [];
-      return (data as HistoryItem[]).reverse();
-    } catch {
-      return [];
-    }
+    if (error) throw error;
+    if (!data?.length) return [];
+
+    return data
+      .map((item) => ({
+        id: String(item.id),
+        game_type: "crash" as const,
+        color: null,
+        number: null,
+        multiplier: Number(item.multiplier),
+        created_at: item.created_at,
+      }))
+      .reverse();
+  } catch (err) {
+    console.error("Erro fetchCrashHistory:", err);
+    return [];
   }
+}
 
-  export async function fetchCrashHistory(limit = 150): Promise<HistoryItem[]> {
-    try {
-      const { data, error } = await supabase
-        .from("roulette_history")
-        .select("*")
-        .eq("game_type", "crash")
-        .order("created_at", { ascending: false })
-        .limit(limit);
-
-      if (error) throw error;
-      if (!data?.length) return [];
-      return (data as HistoryItem[]).reverse();
-    } catch {
-      return [];
-    }
-  }
-  
+export async function fetchHistory(limit = 1000): Promise<HistoryItem[]> {
+  return fetchDoubleHistory(limit);
+}
