@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { fetchDoubleHistory, fetchCrashHistory } from "./services/supabase";
 import { getWindows, calculateFrequency } from "./utils/frequency";
@@ -6,8 +6,7 @@ import { calculateDeviation } from "./utils/deviation";
 import { detectEvents } from "./utils/events";
 import { calculateScore } from "./utils/score";
 import { analyzeCrash } from "./utils/crash";
-import { generateSimulatedDouble, generateSimulatedCrash } from "./utils/simulate";
-import { useBlazeSocket } from "./useBlazeSocket";
+
 import type { HistoryItem } from "./utils/types";
 
 import { ProbabilityCard } from "./components/game/ProbabilityCard";
@@ -19,40 +18,27 @@ import { AlertsBanner } from "./components/game/AlertsBanner";
 import { StatusBar } from "./components/game/StatusBar";
 import { DeviationCard } from "./components/game/DeviationCard";
 
-type DataSource = "supabase" | "socket" | "simulado";
+type DataSource = "supabase";
 type ActiveTab = "double" | "crash";
 
-function mergeHistory(
-  base: HistoryItem[],
-  incoming: HistoryItem[]
-): HistoryItem[] {
-  const seen = new Set(base.map((h) => h.id));
-  const newItems = incoming.filter((h) => !seen.has(h.id));
-  return [...base, ...newItems]
-    .sort((a, b) => a.created_at.localeCompare(b.created_at))
-    .slice(-220);
-}
+
 
 export default function App() {
-  const [doubleHistory, setDoubleHistory] = useState<HistoryItem[]>(() =>
-    generateSimulatedDouble(120)
-  );
-  const [crashHistory, setCrashHistory] = useState<HistoryItem[]>(() =>
-    generateSimulatedCrash(100)
-  );
+  const [doubleHistory, setDoubleHistory] = useState<HistoryItem[]>([]);
+const [crashHistory, setCrashHistory] = useState<HistoryItem[]>([]);
   const [source, setSource] = useState<DataSource>("supabase");
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [activeTab, setActiveTab] = useState<ActiveTab>("double");
   const [isLoading, setIsLoading] = useState(true);
-  const simInterval = useRef<ReturnType<typeof setInterval> | null>(null);
+  
 
-  const blazeSocket = useBlazeSocket();
+  
 
   // Load from Supabase
   const loadFromSupabase = useCallback(async () => {
     const [dbl, crash] = await Promise.all([
-      fetchDoubleHistory(200),
-      fetchCrashHistory(200),
+    fetchDoubleHistory(1000),
+fetchCrashHistory(1000),
     ]);
     if (true) {
       if (dbl.length > 0) setDoubleHistory(dbl);
@@ -78,40 +64,8 @@ export default function App() {
     return () => clearInterval(poll);
   }, [loadFromSupabase]);
 
-  // Socket.io data → merge into state
-  useEffect(() => {
-    if (blazeSocket.status !== "connected") return;
-    if (blazeSocket.doubleRounds.length > 0) {
-      const incoming: HistoryItem[] = blazeSocket.doubleRounds.map((r) => ({
-        id: String(r.id),
-        game_type: "double" as const,
-        color: r.color,
-        multiplier: null,
-        created_at: r.createdAt,
-      }));
-      setDoubleHistory((prev) => mergeHistory(prev, incoming));
-      setSource("socket");
-      setLastUpdate(new Date());
-    }
-    if (blazeSocket.crashRounds.length > 0) {
-      const incoming: HistoryItem[] = blazeSocket.crashRounds.map((r) => ({
-        id: String(r.id),
-        game_type: "crash" as const,
-        color: null,
-        multiplier: r.multiplier,
-        created_at: r.createdAt,
-      }));
-      setCrashHistory((prev) => mergeHistory(prev, incoming));
-    }
-  }, [blazeSocket.status, blazeSocket.doubleRounds, blazeSocket.crashRounds]);
-
-    // Simulation disabled
-  useEffect(() => {
-    if (simInterval.current) {
-      clearInterval(simInterval.current);
-      simInterval.current = null;
-    }
-  }, []);
+  
+    
 
   // --- Analytics (Double) ---
   const doubleWindows = useMemo(() => getWindows(doubleHistory), [doubleHistory]);
@@ -174,7 +128,7 @@ export default function App() {
               }`}
             />
             <span className="text-xs text-slate-500">
-              {source === "supabase" ? "Supabase" : source === "socket" ? "WebSocket" : "Simulado"}
+              Supabase
             </span>
           </div>
         </div>
